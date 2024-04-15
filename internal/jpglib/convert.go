@@ -10,8 +10,12 @@ import (
 
 func Jpeg2Png(fileName string, outFileName string) error {
 	outFile, err := os.Create(outFileName)
+	defer func() {
+		if err := outFile.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	defer outFile.Sync()
-	defer outFile.Close()
 	defer convertError(err)
 	if err != nil {
 		panic(err)
