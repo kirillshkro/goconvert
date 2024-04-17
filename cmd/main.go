@@ -7,7 +7,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/h2non/filetype"
 )
@@ -18,7 +17,6 @@ const (
 )
 
 func main() {
-	var ext string = ""
 	if os.Args[1] != "--input" {
 		fmt.Println("not found parameter --input")
 		os.Exit(NotfoundParameter)
@@ -28,18 +26,25 @@ func main() {
 		fmt.Println("input file not recognized")
 		os.Exit(InputFileNotRecognized)
 	}
-	ext = strings.Split(inputFileName, ".")[1]
-	if getFileType(inputFileName) {
-		switch ext {
-		case "jpg":
-		case "jpeg":
-		case "png":
-		}
+	switch getFileType(inputFileName) {
+	case "image/jpeg":
+	case "image/png":
+	case "image/bmp":
 	}
 
 }
 
-func getFileType(fname string) bool {
+func getFileType(fname string) string {
+	var kind string
+	buf, isImg := isValid(fname)
+	if isImg {
+		kind, _ := filetype.Match(buf[:])
+		return kind.MIME.Value
+	}
+	return kind
+}
+
+func isValid(fname string) (buf []byte, valid bool) {
 	file, err := os.Open(fname)
 	defer func() {
 		if err := recover(); err != nil {
@@ -50,7 +55,7 @@ func getFileType(fname string) bool {
 		panic(err)
 	}
 	defer file.Close()
-	var buf [100]byte
-	file.Read(buf[:])
-	return filetype.IsImage(buf[:])
+	buf = make([]byte, 100)
+	file.Read(buf)
+	return buf, filetype.IsImage(buf)
 }
